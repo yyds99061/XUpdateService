@@ -56,7 +56,7 @@ git clone https://github.com/xuexiangjys/XUpdateService.git
 java -jar build/libs/xxxxx.jar
 ```
 
-4.目前最新的已打包好的jar在项目的`Package`下[xupdateservice-1.0.0.jar](./package/xupdateservice-1.0.0.jar), 运行前请保证你的数据库连接正常。
+4.运行前请保证你的数据库连接正常，如需最新 jar 请执行上面的打包命令并从 `build/libs/` 获取。
 
 ## 版本更新管理后台
 

@@ -8,8 +8,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.bind.DatatypeConverter;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 /**
@@ -56,7 +56,7 @@ public final class TokenUtils {
         Date now = new Date(nowMillis);
 
         // 通过秘钥签名JWT
-        byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(SECRET);
+        byte[] apiKeySecretBytes = Base64.getDecoder().decode(SECRET);
         Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
 
         // Let's set the JWT Claims
@@ -82,7 +82,7 @@ public final class TokenUtils {
     public static Claims parseJWT(String jwt) {
         // This line will throw an exception if it is not a signed JWS (as expected)
         Claims claims = Jwts.parser()
-                .setSigningKey(DatatypeConverter.parseBase64Binary(SECRET))
+                .setSigningKey(Base64.getDecoder().decode(SECRET))
                 .parseClaimsJws(jwt).getBody();
         return claims;
     }

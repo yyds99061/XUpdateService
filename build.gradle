@@ -33,7 +33,9 @@ dependencies {
     implementation 'com.alibaba:druid-spring-boot-starter:1.2.4'
 
     // token令牌
-    implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
     //AOP
     implementation 'org.aspectj:aspectjweaver:1.9.6'
@@ -48,6 +50,11 @@ dependencies {
 
     //网页加载
     implementation('org.springframework.boot:spring-boot-starter-thymeleaf')
+}
+
+test {
+    systemProperty 'mainRuntimeClasspath', sourceSets.main.runtimeClasspath.asPath
+    systemProperty 'testClassesDirs', sourceSets.test.output.classesDirs.asPath
 }
 
 jar {

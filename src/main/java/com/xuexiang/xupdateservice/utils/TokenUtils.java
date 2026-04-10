@@ -3,13 +3,14 @@ package com.xuexiang.xupdateservice.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletRequest;
-import java.security.Key;
-import java.util.Base64;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 /**
@@ -23,6 +24,7 @@ public final class TokenUtils {
      * 签名秘钥
      */
     public static final String SECRET = "xuexiangjys";
+    private static final SecretKey SIGNING_KEY = buildSigningKey();
 
     /**
      * 生成token
@@ -47,24 +49,17 @@ public final class TokenUtils {
      * @return token String
      */
     public static String createJwtToken(String id, String issuer, String subject, long ttlMillis) {
-
-        // 签名算法 ，将对token进行签名
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-
         // 生成签发时间
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
 
-        // 通过秘钥签名JWT
-        byte[] apiKeySecretBytes = Base64.getDecoder().decode(SECRET);
-        Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
-
         // Let's set the JWT Claims
-        JwtBuilder builder = Jwts.builder().setId(id)
-                .setIssuedAt(now)
-                .setSubject(subject)
-                .setIssuer(issuer)
-                .signWith(signatureAlgorithm, signingKey);
+        JwtBuilder builder = Jwts.builder()
+                .id(id)
+                .issuedAt(now)
+                .subject(subject)
+                .issuer(issuer)
+                .signWith(SIGNING_KEY, Jwts.SIG.HS256);
 
         // if it has been specified, let's add the expiration
         if (ttlMillis >= 0) {
@@ -80,11 +75,11 @@ public final class TokenUtils {
 
     // Sample method to validate and read the JWT
     public static Claims parseJWT(String jwt) {
-        // This line will throw an exception if it is not a signed JWS (as expected)
-        Claims claims = Jwts.parser()
-                .setSigningKey(Base64.getDecoder().decode(SECRET))
-                .parseClaimsJws(jwt).getBody();
-        return claims;
+        return Jwts.parser()
+                .verifyWith(SIGNING_KEY)
+                .build()
+                .parseSignedClaims(jwt)
+                .getPayload();
     }
 
 
@@ -104,6 +99,17 @@ public final class TokenUtils {
 
     public static void main(String[] args) {
         System.out.println(TokenUtils.createJwtToken("11111"));
+    }
+
+    // Preserve the configured secret string while deriving an HS256-compliant key for newer JJWT versions.
+    private static SecretKey buildSigningKey() {
+        try {
+            byte[] keyBytes = MessageDigest.getInstance("SHA-256")
+                    .digest(SECRET.getBytes(StandardCharsets.UTF_8));
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Failed to initialize jwt signing key", e);
+        }
     }
 
 }
